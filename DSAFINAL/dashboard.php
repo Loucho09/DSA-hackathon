@@ -77,6 +77,7 @@ if (isset($_FILES['image']) && is_array($_FILES['image'])) {
         </aside>
 
         <!-- Main Content -->
+        <!-- Mat -- Added Help functionality -->
         <main class="main-content">
             <header class="topbar">
                 <button class="menu-btn" onclick="toggleMenu()">☰ Menu</button>   
@@ -84,7 +85,7 @@ if (isset($_FILES['image']) && is_array($_FILES['image'])) {
                 <div class="header-links">
                     <a id="registerLink" href="register.php">Register</a>
                     <a id="signInLink" href="login.php">Sign in</a>
-                    <a href="#">Help</a>
+                    <a href="#" id="helpLink">Help</a>
                     <a href="cart.php">Cart</a>
                 </div>
             </header>
@@ -234,6 +235,76 @@ if (isset($_FILES['image']) && is_array($_FILES['image'])) {
             if (signInLink) signInLink.style.display = 'none';
             // Optionally sync localStorage for other pages that rely on it
             try { localStorage.setItem('auth', 'true'); } catch (e) {}
+        })();
+        // Help overlay open/close and submit
+        (function setupHelpOverlay(){
+            const link = document.getElementById('helpLink');
+            if (!link) return;
+            let modal = document.getElementById('helpModal');
+            let backdrop = document.getElementById('helpBackdrop');
+            if (!modal) {
+                backdrop = document.createElement('div');
+                backdrop.id = 'helpBackdrop';
+                document.body.appendChild(backdrop);
+                modal = document.createElement('div');
+                modal.id = 'helpModal';
+                modal.innerHTML = `
+                    <h3>Contact Support</h3>
+                    <p>Tell us about your issue and we’ll get back to you via email.</p>
+                    <form id="helpForm">
+                        <div class="row">
+                            <div>
+                                <label for="helpName">Your Name</label>
+                                <input type="text" id="helpName" name="name" required>
+                            </div>
+                            <div>
+                                <label for="helpEmail">Your Email</label>
+                                <input type="email" id="helpEmail" name="email" required>
+                            </div>
+                        </div>
+                        <div style="margin-top:10px">
+                            <label for="helpMessage">Message</label>
+                            <textarea id="helpMessage" name="message" required></textarea>
+                        </div>
+                        <div id="helpStatus" style="margin-top:8px; font-size:14px;"></div>
+                        <div class="actions">
+                            <button type="button" id="helpClose" class="btn">Close</button>
+                            <button type="submit" class="btn">Send</button>
+                        </div>
+                    </form>`;
+                document.body.appendChild(modal);
+            }
+            const open = ()=>{ modal.classList.add('open'); backdrop.classList.add('open'); };
+            const close = ()=>{ modal.classList.remove('open'); backdrop.classList.remove('open'); };
+            link.addEventListener('click', (e)=>{ e.preventDefault(); open(); });
+            document.addEventListener('click', (e)=>{
+                if (e.target && (e.target.id === 'helpClose' || e.target.id === 'helpBackdrop')) close();
+            });
+            document.addEventListener('submit', async (e)=>{
+                const form = e.target;
+                if (form && form.id === 'helpForm') {
+                    e.preventDefault();
+                    const status = document.getElementById('helpStatus');
+                    status.textContent = '';
+                    try {
+                        const data = new FormData(form);
+                        const res = await fetch('support.php', { method: 'POST', body: data });
+                        const json = await res.json().catch(()=>null);
+                        if (json && json.ok) {
+                            status.style.color = '#0b6b2b';
+                            status.textContent = 'Thanks! Your message has been sent.';
+                            form.reset();
+                        } else {
+                            status.style.color = '#a24646';
+                            status.textContent = (json && json.error) ? json.error : 'Failed to send. Please try again later.';
+                        }
+                    } catch(err) {
+                        const status = document.getElementById('helpStatus');
+                        status.style.color = '#a24646';
+                        status.textContent = 'Network error. Please try again.';
+                    }
+                }
+            });
         })();
     </script>
  
@@ -651,6 +722,92 @@ if (isset($_FILES['image']) && is_array($_FILES['image'])) {
             padding-top: 30px;
             border-top: 1px solid #444;
             color: #999;
+        }
+        
+        #helpBackdrop { 
+            position: fixed; 
+            inset: 0; 
+            background: rgba(0,0,0,0.5); 
+            opacity: 0; 
+            pointer-events: none; 
+            transition: opacity .2s ease; 
+        }
+
+        #helpBackdrop.open { 
+            opacity: 1; 
+            pointer-events: auto; 
+        }
+
+        #helpModal { 
+            position: fixed; 
+            top: 50%; 
+            left: 50%; 
+            transform: translate(-50%, -50%) scale(.98); 
+            width: 95%; 
+            max-width: 520px; 
+            background: #fff; 
+            border-radius: 12px; 
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2); 
+            padding: 20px; 
+            opacity: 0; 
+            pointer-events: none; 
+            transition: opacity .2s ease, transform .2s ease; 
+            z-index: 1100; 
+        }
+
+        #helpModal.open { 
+            opacity: 1; 
+            pointer-events: auto; 
+            transform: translate(-50%, -50%) scale(1); 
+        }
+
+        #helpModal h3 {
+            margin-bottom: 10px; 
+        }
+
+        #helpModal p { 
+            margin-bottom: 12px; 
+            color: #555; 
+        }
+
+        #helpModal .row { 
+            display: grid; 
+            grid-template-columns: 1fr 1fr; 
+            gap: 10px; 
+        }
+
+        #helpModal input, #helpModal textarea { 
+            width: 100%; 
+            padding: 10px 12px; 
+            border: 1px solid #ddd; 
+            border-radius: 8px; 
+            font-family: inherit; 
+        }
+
+        #helpModal textarea { 
+            min-height: 120px; 
+            resize: vertical; 
+        }
+
+        #helpModal .actions { 
+            display: flex; 
+            justify-content: flex-end; 
+            gap: 10px; 
+            margin-top: 12px; 
+        }
+
+        #helpModal .btn { 
+            background: #a24646; 
+            color: #fff; border: none; 
+            padding: 10px 14px; 
+            border-radius: 8px; 
+            cursor: pointer; 
+        }
+
+        #helpClose { 
+            background: transparent; 
+            color: #a24646; 
+            border: 1px solid #a24646; 
         }
 </style>
 
