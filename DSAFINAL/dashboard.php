@@ -85,7 +85,7 @@ if (isset($_FILES['image']) && is_array($_FILES['image'])) {
                     <a id="registerLink" href="register.php">Register</a>
                     <a id="signInLink" href="login.php">Sign in</a>
                     <a href="#">Help</a>
-                    <a href="#">Cart</a>
+                    <a href="cart.php">Cart</a>
                 </div>
             </header>
 
