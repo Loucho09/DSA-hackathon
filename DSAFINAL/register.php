@@ -25,7 +25,8 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                 if ($stmt) {
                     $stmt->bind_param('sss', $fullName, $email, $hash);
                     if ($stmt->execute()) {
-                        $success = 'Registered successfully!';
+                        header('Location: login.php?registered=1');
+                        exit;
                     } else {
                         $error = 'Registration failed.';
                     }
