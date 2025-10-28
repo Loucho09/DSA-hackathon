@@ -43,7 +43,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
   <div class="container" id="loginContainer">
     <button class="close-btn" id="closeBtn">&times;</button>
 
-    <!-- Left Side -->
+    <!-- left Side -->
     <div class="left-panel">
       <img src="pringles-seeklogo.png" alt="Logoo" class="logo">
 
